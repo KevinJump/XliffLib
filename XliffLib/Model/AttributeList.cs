@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Localization.Xliff.OM.Core;
 using Localization.Xliff.OM.Modules.Metadata;
 
 namespace XliffLib.Model
@@ -27,6 +29,23 @@ namespace XliffLib.Model
 
             metadata.Groups.Add(defaultGroup);
             return metadata;
+        }
+
+        public void FromXliff(TranslationContainer container)
+        {
+            if (container.Metadata != null && container.Metadata.HasGroups)
+            {
+                var metaGroup = container.Metadata.Groups.Where(x => x.Id == "XliffLib")
+                    .FirstOrDefault();
+                if (metaGroup != null)
+                {
+                    foreach (var metaItem in metaGroup.Containers)
+                    {
+                        var meta = metaItem as Meta;
+                        this.Add(meta.Type, meta.NonTranslatableText);
+                    }
+                }
+            }
         }
     }
 }

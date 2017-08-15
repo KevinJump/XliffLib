@@ -13,7 +13,7 @@ namespace XliffLib.Model
         }
         public string Value { get; set; }
 
-        public static new PropertyContainer FromXliff(TranslationContainer xliffUnit)
+        public static new PropertyContainer FromXliff(TranslationContainer xliffUnit, bool loadFromSource = false)
         {
             var unit = xliffUnit as Unit;
             //TODO: Add test for this condition
@@ -21,22 +21,34 @@ namespace XliffLib.Model
                 throw new InvalidOperationException("Cannot operate on multiple segments. Make sure previous steps of the import have merged all segments into one.");
             var segment = unit.Resources[0] as Segment;
 
+            ResourceString resourceString = segment.Target;
+            if (loadFromSource)
+                resourceString = segment.Source;
+
             //TODO: Add test for this condition
-            if (segment.Target == null || segment.Target.Text == null || segment.Target.Text.Count == 0)
+            if (resourceString == null || resourceString.Text == null || resourceString.Text.Count == 0)
                 throw new InvalidOperationException("Property doesn't have a target: cannot import.");
 
             //TODO: Add test for this condition
-            if (segment.Target.Text.Count > 1)
+            if (resourceString.Text.Count > 1)
                 throw new InvalidOperationException("Cannot operate on target with multiple elements. Make sure previous steps have converted all inline markup into a CData section");
 
-            var text = segment.Target.Text[0] as PlainText;
+            var text = resourceString.Text[0] as PlainText;
 
             if (text != null)
-                return new Property(xliffUnit.Name, text.Text);
+            {
+                var property = new Property(xliffUnit.Name, text.Text);
+                property.Attributes.FromXliff(xliffUnit);
+                return property;
+            }
 
             var html = segment.Target.Text[0] as CDataTag;
             if (html != null)
-                return new Property(xliffUnit.Name, html.Text);
+            {
+                var property = new Property(xliffUnit.Name, html.Text);
+                property.Attributes.FromXliff(xliffUnit);
+                return property;
+            }
 
             //TODO: Add test for this condition
             return null;

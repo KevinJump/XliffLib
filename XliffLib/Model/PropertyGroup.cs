@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Localization.Xliff.OM.Core;
+using Localization.Xliff.OM.Modules.Metadata;
 
 namespace XliffLib.Model
 {
@@ -15,14 +16,16 @@ namespace XliffLib.Model
         }
         public IList<PropertyContainer> Containers { get; private set; }
 
-        public static new PropertyContainer FromXliff(TranslationContainer xliffGroup)
+        public static new PropertyContainer FromXliff(TranslationContainer xliffGroup, bool loadFromSource = false)
         {
             var group = xliffGroup as Group;
             var propertyGroup = new PropertyGroup(xliffGroup.Name);
 
+            propertyGroup.Attributes.FromXliff(xliffGroup);
+
             foreach (var container in group.Containers)
             {
-                propertyGroup.Containers.Add(PropertyContainer.FromXliff(container));
+                propertyGroup.Containers.Add(PropertyContainer.FromXliff(container, loadFromSource));
             }
 
             return propertyGroup;
@@ -35,6 +38,7 @@ namespace XliffLib.Model
             {
                 Name = this.Name
             };
+
             if (this.Attributes.Count > 0)
             {
                 xliffGroup.Metadata = this.Attributes.ToXliffMetadata();
